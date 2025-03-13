@@ -290,7 +290,6 @@ def interactive_session(solutions, substitutions, equations, solve_vars):
                 except Exception as e:
                     print(f"Error: {str(e)}")
 
-
 def main():
     session_loaded = False
     solutions = None
