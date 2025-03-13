@@ -22,9 +22,7 @@ python3 -m pip install sympy
 
 Projekt spusťte příkazem:
 
-python <název_souboru>.py
-
-kde `<název_souboru>.py` je soubor obsahující zdrojový kód projektu.
+python3 main.py
 
 ## Používání projektu
 
