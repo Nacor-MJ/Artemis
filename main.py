@@ -5,14 +5,14 @@ try:
     import pickle
 except Exception as e:
     print(e)
-    print("Required modules not installed. Please install sympy.")
-    print("Run: python3 -m pip install sympy")
+    print("Chybí potřebné moduly. Prosím nainstalujte sympy.")
+    print("Spusťte: python3 -m pip install sympy")
     exit()
 session_file = 'circuit_session.pkl'
 init_printing()
 
 def parse_equation(eq_input):
-    """Parse a single equation from user input into a SymPy Eq object."""
+    """Převede zadanou rovnici z uživatelského vstupu na objekt Eq ze SymPy."""
     eq_input = eq_input.replace('=', '==')
     try:
         if '==' in eq_input:
@@ -24,7 +24,7 @@ def parse_equation(eq_input):
         raise ValueError(f"Neplatná rovnice: {eq_input}") from e
 
 def collect_equations():
-    """Collect multiple equations from user input."""
+    """Interaktivně sbírá rovnice z uživatelského vstupu."""
     equations = []
     print("Zadejte rovnice (nebo prázdný vstup pro dokončení):")
     while True:
@@ -40,7 +40,7 @@ def collect_equations():
     return equations
 
 def get_solve_vars(available_symbols, num_equations):
-    """Prompt user for variables to solve for, with validation."""
+    """Vyžádá si od uživatele proměnné, pro které se má řešit, s validací."""
     while True:
         input_vars = input(f"\nZadejte {num_equations} proměnné k řešení (oddělené čárkou): ").strip()
         if not input_vars:
@@ -61,7 +61,7 @@ def get_solve_vars(available_symbols, num_equations):
         return solve_vars
 
 def substitute_parameters(equations, solve_vars):
-    """Interactive parameter substitution with user guidance."""
+    """Interaktivně nahrazuje parametry podle pokynů uživatele."""
     symbols = sorted(set().union(*[eq.free_symbols for eq in equations]) - set(solve_vars),
                     key=lambda s: s.name)
     
@@ -98,7 +98,7 @@ def substitute_parameters(equations, solve_vars):
         for i, eq in enumerate(equations, 1):
             print(f"{i}: {eq}")
         
-        # Update available symbols after substitution
+        # Aktualizace dostupných symbolů po substituci
         symbols = sorted(set().union(*[eq.free_symbols for eq in equations]) - set(solve_vars),
                         key=lambda s: s.name)
         if not symbols:
@@ -109,62 +109,62 @@ def substitute_parameters(equations, solve_vars):
     return equations, substitutions
 
 def solve_system(equations, solve_vars):
-    """Solve the system with proper numerical evaluation"""
+    """Vyřeší systém rovnic s numerickým vyhodnocením."""
     try:
-        # First try linear solver
+        # Nejprve se pokusí o lineární řešení
         lin_solution = linsolve(equations, solve_vars)
         if lin_solution != EmptySet:
             solutions = [dict(zip(solve_vars, sol)) for sol in lin_solution]
     except (ValueError, TypeError):
         solutions = None
 
-    # Fallback to non-linear solver if needed
+    # Pokud lineární řešení selže, použije se nelineární solver
     if not solutions:
         solutions = solve(equations, solve_vars, dict=True)
 
     if not solutions:
-        print("No solutions found")
+        print("Nebyla nalezena žádná řešení")
         return None
 
-    # Process solutions for numerical evaluation
+    # Zpracování řešení pro numerické vyhodnocení
     processed = []
     for sol in solutions:
         numerical_sol = {}
         for var, expr in sol.items():
-            # Attempt to numerically evaluate if possible
+            # Pokusí se numericky vyhodnotit, pokud je to možné
             try:
                 numerical_sol[var] = expr.evalf() if expr.free_symbols else expr
             except:
                 numerical_sol[var] = expr
         processed.append(numerical_sol)
 
-    print("\nSolutions found:")
+    print("\nNalezena řešení:")
     for i, sol in enumerate(processed, 1):
-        print(f"Solution {i}:")
+        print(f"Řešení {i}:")
         for var, val in sol.items():
             if val.free_symbols:
-                print(f"  {var} = {val} (symbolic)")
+                print(f"  {var} = {val} (symbolické)")
             else:
-                print(f"  {var} = {val.evalf(4)} (numerical)")
+                print(f"  {var} = {val.evalf(4)} (číselné)")
     
     return processed
 
 def show_help():
-    print("\nHelp:")
-    print("Interactive mode ")
-    print("Available commands:")
-    print("- 'help' - show this help message")
-    print("- 'equations' - show current equation system")
-    print("- 'substitutions' - show current parameter values")
-    print("- 'solve' - re-solve system with current values")
-    print("- 'vars' - show variables being solved for")
-    print("- 'delete' - deletes the current session and exits")
-    print("- 'save' - saves the current sessions")
-    print("- 'exit' | 'quit' - save and quit")
-    print("- Any math expression to evaluate")
+    print("\nNápověda:")
+    print("Interaktivní režim")
+    print("Dostupné příkazy:")
+    print("- 'help' - zobrazí tuto nápovědu")
+    print("- 'equations' - zobrazí aktuální systém rovnic")
+    print("- 'substitutions' - zobrazí aktuální hodnoty substitucí")
+    print("- 'solve' - znovu vyřeší systém s aktuálními hodnotami")
+    print("- 'vars' - zobrazí proměnné, pro které se řeší systém")
+    print("- 'delete' - smaže aktuální relaci a ukončí program")
+    print("- 'save' - uloží aktuální relaci")
+    print("- 'exit' | 'quit' - uloží relaci a ukončí program")
+    print("- Libovolný matematický výraz k vyhodnocení")
 
 def save_session(solutions, substitutions, equations, solve_vars):
-    # save_data
+    # Uložení dat relace
     session_data = {
         'equations': equations,
         'substitutions': substitutions,
@@ -173,10 +173,10 @@ def save_session(solutions, substitutions, equations, solve_vars):
     }
     with open(session_file, 'wb') as f:
         pickle.dump(session_data, f)
-    print("\nSession saved successfully.")
+    print("\nRelace byla úspěšně uložena.")
 
 def parse(f):
-    '''parses the equation'''
+    '''Parsuje rovnici'''
     if use_latex:
         return latex(f)
     else:
@@ -184,9 +184,9 @@ def parse(f):
 
 use_latex = False
 def interactive_session(solutions, substitutions, equations, solve_vars):
-    """Enhanced interactive session with persistent substitutions"""
+    """Rozšířený interaktivní režim s perzistentními substitucemi."""
     global use_latex
-    # Create combined substitution map with string keys
+    # Vytvoří mapu substitucí s klíči jako řetězce
     sub_map = {str(k): v for k, v in substitutions.items()}
     for sol in solutions:
         sub_map.update({str(k): v for k, v in sol.items()})
@@ -203,7 +203,7 @@ def interactive_session(solutions, substitutions, equations, solve_vars):
         if og_expr != expr:
             use_latex = True
         
-        # Handle commands
+        # Zpracování příkazů
         match expr.lower():
             case 'delete':
                 confirm_message = "Matous je nejlepsi"
@@ -217,17 +217,17 @@ def interactive_session(solutions, substitutions, equations, solve_vars):
                 save_session(solutions, substitutions, equations, solve_vars)
             case 'equations':
                 current_eqs = [eq.subs(substitutions) for eq in equations]
-                print("\nCurrent equation system:")
+                print("\nAktuální systém rovnic:")
                 for i, eq in enumerate(current_eqs, 1):
-                    print(f"Equation {pares(i)}: {parse(eq)}")
+                    print(f"Rovnice {i}: {parse(eq)}")
                 continue
             case 'substitutions':
-                print("\nCurrent substitutions:")
+                print("\nAktuální substituce:")
                 for k, v in substitutions.items():
                     print(f"  {parse(k)} = {parse(v)}")
                 continue
             case 'vars':
-                print("\nVariables being solved for:")
+                print("\nProměnné, pro které se řeší:")
                 print(", ".join(map(str, solve_vars)))
                 continue
             case 'solve':
@@ -235,60 +235,54 @@ def interactive_session(solutions, substitutions, equations, solve_vars):
                 new_solutions = solve_system(current_eqs, solve_vars)
                 if new_solutions:
                     solutions = new_solutions
-                    # Update both substitution systems
+                    # Aktualizace substituční mapy
                     sub_map.update({str(k): v for sol in solutions for k, v in sol.items()})
-                    print("System re-solved with current substitutions")
+                    print("Systém byl znovu vyřešen s aktuálními substitucemi")
                 continue
             case 'help':
                 show_help()
                 continue
             case _:
-                # Handle variable assignments
+                # Zpracování přiřazení proměnných
                 try:
                     if '=' in expr:
                         lhs_str, rhs_str = map(str.strip, expr.split('=', 1))
                         
-                        # Validate left-hand side
+                        # Validace levé strany
                         try:
                             lhs_sym = Symbol(lhs_str)
                         except:
-                            print(f"Invalid symbol name: {parse(lhs_str)}")
+                            print(f"Neplatný název symbolu: {parse(lhs_str)}")
                             continue
                         
-                        # Prevent overriding solution variables
-                        # if lhs_sym in solve_vars:
-                        #    print(f"Cannot assign to solution variable {lhs_sym}")
-                        #    continue
-                        
-                        # Parse right-hand side
+                        # Parsování pravé strany
                         try:
                             rhs_expr = sympify(rhs_str, locals=sub_map)
                         except Exception as e:
-                            print(f"Invalid expression: {parse(e)}")
+                            print(f"Neplatný výraz: {parse(e)}")
                             continue
                         
-                        # Update persistent substitutions
+                        # Aktualizace perzistentních substitucí
                         substitutions[lhs_sym] = rhs_expr
-                        # Update local evaluation map
                         sub_map[lhs_str] = rhs_expr
-                        print(f"Added substitution: {parse(lhs_sym)} = {parse(rhs_expr)}")
+                        print(f"Přidána substituce: {parse(lhs_sym)} = {parse(rhs_expr)}")
                         continue
 
-                    # Evaluate expressions
+                    # Vyhodnocení výrazu
                     expr = sympify(expr, locals=sub_map)
                     substituted = expr.subs(substitutions)
                     
                     try:
                         numerical = substituted.evalf()
                         if numerical != substituted:
-                            print(f"Symbolic: {parse(substituted)} = ", end = "")
+                            print(f"Symbolické: {parse(substituted)} = ", end = "")
                             print(f"{parse(numerical.evalf(4))}")
                         else:
-                            print(f"Result: {parse(numerical.evalf(4))}")
+                            print(f"Výsledek: {parse(numerical.evalf(4))}")
                     except:
-                        print(f"Symbolic result: {parse(substituted)}")
+                        print(f"Symbolický výsledek: {parse(substituted)}")
                 except Exception as e:
-                    print(f"Error: {str(e)}")
+                    print(f"Chyba: {str(e)}")
 
 def main():
     session_loaded = False
@@ -297,7 +291,7 @@ def main():
     equations = []
     solve_vars = []
 
-    # Attempt to load existing session (only difference is pickle loading)
+    # Pokus o načtení existující relace
     if os.path.exists(session_file):
         try:
             with open(session_file, 'rb') as f:
@@ -307,53 +301,51 @@ def main():
             solve_vars = session_data['solve_vars']
             solutions = session_data.get('solutions', None)
             session_loaded = True
-            print("\nLoaded existing session.")
+            print("\nByla načtena existující relace.")
             
-            # Print equations if loaded
+            # Výpis načtených rovnic
             if equations:
-                print("\nCurrent equations:")
+                print("\nAktuální rovnice:")
                 for i, eq in enumerate(equations, 1):
-                    print(f"Equation {i}: {eq}")
+                    print(f"Rovnice {i}: {eq}")
                 if substitutions:
-                    print("\nCurrent substitutions:")
+                    print("\nAktuální substituce:")
                     for k, v in substitutions.items():
                         print(f"{k} = {v}")
         except Exception as e:
-            print(f"\nError loading session: {e}")
+            print(f"\nChyba při načítání relace: {e}")
             session_loaded = False
 
     try:
         if session_loaded:
-            # Directly use loaded data
+            # Přímo použít načtená data
             if solutions is None or not solutions:
                 solutions = solve_system(equations, solve_vars)
             if solutions:
                 interactive_session(solutions, substitutions, equations, solve_vars)
         else:
-            # Normal operation flow
+            # Standardní průběh programu
             equations = collect_equations()
             if not equations:
-                print("No equations to solve.")
+                print("Nebyla zadána žádná rovnice.")
                 return
 
             all_symbols = set().union(*[eq.free_symbols for eq in equations])
-            print("\nAvailable symbols:", ', '.join(map(str, all_symbols)))
+            print("\nDostupné symboly:", ', '.join(map(str, all_symbols)))
             
             solve_vars = get_solve_vars(all_symbols, len(equations))
-            print("\nSolving for:", ', '.join(map(str, solve_vars)))
+            print("\nŘešení pro:", ', '.join(map(str, solve_vars)))
             
             equations, substitutions = substitute_parameters(equations, solve_vars)
             
             solutions = solve_system(equations, solve_vars)
 
             interactive_session(solutions, substitutions, equations, solve_vars)
-
-
     
     except Exception as e:
-        print(f"\nError: {e}")
+        print(f"\nChyba: {e}")
     finally:
-        print("\nProgram exited.")
+        print("\nProgram ukončen.")
 
 if __name__ == "__main__":
     main()
