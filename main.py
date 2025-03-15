@@ -1,6 +1,7 @@
 try:
     from sympy import *
     from sympy.solvers.solveset import linsolve
+    from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application
     import os
     import pickle
 except Exception as e:
@@ -8,19 +9,24 @@ except Exception as e:
     print("Chybí potřebné moduly. Prosím nainstalujte sympy.")
     print("Spusťte: python3 -m pip install sympy")
     exit()
+
 session_file = 'circuit_session.pkl'
 init_printing()
 
+transformations = (standard_transformations + (implicit_multiplication_application,))
+
 def parse_equation(eq_input):
-    """Převede zadanou rovnici z uživatelského vstupu na objekt Eq ze SymPy."""
     eq_input = eq_input.replace('=', '==')
     try:
         if '==' in eq_input:
             left, right = eq_input.split('==', 1)
-            return Eq(sympify(left.strip()), sympify(right.strip()))
+            left_expr = parse_expr(left.strip(), transformations=transformations)
+            right_expr = parse_expr(right.strip(), transformations=transformations)
+            return Eq(left_expr, right_expr)
         else:
-            return Eq(sympify(eq_input.strip()), 0)
-    except SympifyError as e:
+            expr = parse_expr(eq_input.strip(), transformations=transformations)
+            return Eq(expr, 0)
+    except Exception as e:
         raise ValueError(f"Neplatná rovnice: {eq_input}") from e
 
 def collect_equations():
@@ -177,7 +183,7 @@ def save_session(solutions, substitutions, equations, solve_vars):
     print("\nRelace byla úspěšně uložena.")
 
 def parse(f):
-    '''Parsuje rovnici'''
+    '''Přeparsuje rovnici'''
     if use_latex:
         return latex(f)
     else:
@@ -267,21 +273,20 @@ def interactive_session(solutions, substitutions, equations, solve_vars):
                         substitutions[lhs_sym] = rhs_expr
                         sub_map[lhs_str] = rhs_expr
                         print(f"Přidána substituce: {parse(lhs_sym)} = {parse(rhs_expr)}")
-                        continue
-
-                    # Vyhodnocení výrazu
-                    expr = sympify(expr, locals=sub_map)
-                    substituted = expr.subs(substitutions)
-                    
-                    try:
-                        numerical = substituted.evalf()
-                        if numerical != substituted:
-                            print(f"Symbolické: {parse(substituted)} = ", end = "")
-                            print(f"{parse(numerical.evalf(4))}")
-                        else:
-                            print(f"Výsledek: {parse(numerical.evalf(4))}")
-                    except:
-                        print(f"Symbolický výsledek: {parse(substituted)}")
+                    else:
+                        # Vyhodnocení výrazu
+                        expr = sympify(expr, locals=sub_map)
+                        substituted = expr.subs(substitutions)
+                        
+                        try:
+                            numerical = substituted.evalf()
+                            if numerical != substituted:
+                                print(f"Symbolické: {parse(substituted)} = ", end = "")
+                                print(f"{parse(numerical.evalf(4))}")
+                            else:
+                                print(f"Výsledek: {parse(numerical.evalf(4))}")
+                        except:
+                            print(f"Symbolický výsledek: {parse(substituted)}")
                 except Exception as e:
                     print(f"Chyba: {str(e)}")
 
