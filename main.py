@@ -161,6 +161,7 @@ def show_help():
     print("- 'delete' - smaže aktuální relaci a ukončí program")
     print("- 'save' - uloží aktuální relaci")
     print("- 'exit' | 'quit' - uloží relaci a ukončí program")
+    print("- 'latex' + expr - zobrazí expr ve formátu latex")
     print("- Libovolný matematický výraz k vyhodnocení")
 
 def save_session(solutions, substitutions, equations, solve_vars):
@@ -218,7 +219,7 @@ def interactive_session(solutions, substitutions, equations, solve_vars):
             case 'equations':
                 current_eqs = [eq.subs(substitutions) for eq in equations]
                 print("\nAktuální systém rovnic:")
-                for i, eq in enumerate(current_eqs, 1):
+                for i, eq in enumerate(equations, 1):
                     print(f"Rovnice {i}: {parse(eq)}")
                 continue
             case 'substitutions':
