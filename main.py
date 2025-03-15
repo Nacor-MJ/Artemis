@@ -59,6 +59,10 @@ def get_solve_vars(available_symbols, num_equations):
             print("Neplatný formát proměnných. Použijte např. 'x, y, z'.")
             continue
 
+        if len(solve_vars) != num_equations:
+            print(f"Varování: Počet proměnných ({len(solve_vars)}) neodpovídá počtu rovnic ({num_equations}).")
+
+
         missing = [v for v in solve_vars if v not in available_symbols]
         if missing:
             print(f"Proměnné {missing} nejsou v rovnicích. Dostupné proměnné: {available_symbols}")
@@ -75,6 +79,7 @@ def substitute_parameters(equations, solve_vars):
         print("Žádné parametry k nahrazení.")
         return equations, {}
     
+    
     print("\nDostupné parametry:", ', '.join(map(str, symbols)))
     substitutions = {}
     while True:
@@ -86,6 +91,8 @@ def substitute_parameters(equations, solve_vars):
             symbol = Symbol(choice)
             if symbol not in symbols:
                 print(f"Parametr {symbol} není v seznamu.")
+            if symbol in solve_vars:
+                print(f"Nelze substituovat proměnnou řešení {symbol}.")
                 continue
         except Exception:
             print("Neplatný symbol.")
@@ -151,12 +158,18 @@ def solve_system(equations, solve_vars):
             if val.free_symbols:
                 print(f"  {var} = {val} (symbolické)")
             else:
-                print(f"  {var} = {val.evalf(4)} (číselné)")
+                num_val = val.evalf(4)
+                if num_val.as_real_imag()[1] != 0:
+                    print(f"  {var} = {num_val} (komplexní)")
+                else:
+                    print(f"  {var} = {num_val} (číselné)")
     
     return processed
 
 def show_help():
     print("\nNápověda:")
+    print("Příklady vstupu rovnic: '3x + 2y = 5', 'I1 - I2 = 0'")
+    print("Substituce parametrů: 'R1 = 100', 'V = 5'")
     print("Interaktivní režim")
     print("Dostupné příkazy:")
     print("- 'help' - zobrazí tuto nápovědu")
@@ -185,7 +198,7 @@ def save_session(solutions, substitutions, equations, solve_vars):
 def parse(f):
     '''Přeparsuje rovnici'''
     if use_latex:
-        return latex(f)
+        return latex(f, mode='equation')
     else:
         return f
 
@@ -201,7 +214,7 @@ def interactive_session(solutions, substitutions, equations, solve_vars):
     show_help()
 
     while True:
-        expr = input("\n>>> ").strip()
+        expr = input("\n>>> ").strip().lower()
 
         use_latex = False
         og_expr = expr
